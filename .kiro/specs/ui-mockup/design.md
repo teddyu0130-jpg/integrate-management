@@ -216,7 +216,7 @@ sequenceDiagram
 | `lib/data.ts` | Data | env 分岐データアクセス | 1.5–1.7 | mock-data.ts, engine stub | Service |
 | `lib/mock-data.ts` | Data | 静的モックデータ | 1.2–1.4 | types/index.ts | State |
 | `BottomNav` | UI/Client | ナビゲーション | 2.1–2.2 | usePathname | — |
-| `HomeViewToggle` | UI/Client | Find/Replenish タブ切り替え | 3.1, 4.1 | useSearchParams | — |
+| `HomeViewToggle` | UI/Client | Find/Replenish/Duplicate タブ切り替え | 3.1, 4.1, 7.1 | useSearchParams | — |
 | `StockBadge` | UI/Server | stock_level バッジ表示 | 3.3, 4.3 | — | — |
 | `ItemCard` | UI/Server | アイテム行表示 | 3.2–3.4, 4.2 | StockBadge | — |
 | `ItemForm` | UI/Client | 登録・編集フォーム | 8.1–8.4, 9.1–9.4 | — | — |
@@ -338,13 +338,15 @@ export interface BottomNavProps {
 
 | Field | Detail |
 |-------|--------|
-| Intent | Find Mode / Replenish Mode のタブ切り替え UI（Client Component） |
-| Requirements | 3.1, 3.5, 4.1, 4.5 |
+| Intent | Find / Replenish / Duplicate Mode の3タブ切り替え UI（Client Component） |
+| Requirements | 3.1, 3.5, 4.1, 4.5, 7.1–7.4 |
 
 **Responsibilities & Constraints**
-- `"use client"` — `useSearchParams` で `?view=find|replenish` を読む
+- `"use client"` — `useSearchParams` で `?view=find|replenish|duplicate` を読む
+- AppHeader（動的タイトル・更新ボタン）・ModeTabs・SearchBar・ProviderStatusBar を内部に含む
 - `items` を props として受け取り、`view` に応じてソート・グループ化して描画する
 - URL 変更は `router.push('/home?view=...')` で行う
+- `duplicate` タブでは items から重複ペアを内部で検出し DuplicateAlertCard を表示する
 
 ```typescript
 export interface HomeViewToggleProps {
@@ -387,11 +389,11 @@ export interface StockBadgeProps {
 }
 ```
 
-色マッピング:
-- `empty` → 赤（`bg-red-100 text-red-700`）
-- `low` → 黄（`bg-yellow-100 text-yellow-700`）
-- `ok` → 緑（`bg-green-100 text-green-700`）
-- `full` → グレー（`bg-zinc-100 text-zinc-500`）
+色マッピング（ui.pen カラートークン使用）:
+- `empty` → `bg-missing text-missing-foreground`（`#FEE2E2` / `#991B1B`）
+- `low` → `bg-warning text-warning-foreground`（`#FEF3C7` / `#92400E`）
+- `ok` → `bg-success text-success-foreground`（`#DCFCE7` / `#166534`）
+- `full` → `bg-secondary text-muted-foreground`（`#E8F0EA` / `#5C6B60`）
 
 ---
 

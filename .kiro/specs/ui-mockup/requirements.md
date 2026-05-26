@@ -62,7 +62,7 @@ integrate-management（App③）のモックアップフェーズ要件定義。
 2. The App③ shall 各アイテム行に `name`・`stock_level`（視覚的バッジ）・`location`・`category` を表示する
 3. The App③ shall `stock_level` に応じて行またはバッジの色を変化させる（例：`empty` = 赤、`low` = 黄、`ok` = 緑、`full` = グレー）
 4. When アイテム行をタップしたとき, the App③ shall I-03 アイテム詳細画面（`/items/[iri]`）に遷移する
-5. The App③ shall I-01 と I-02 をタブ切り替えまたは同一ホーム画面内のビュー切り替えで実装し、ルートは `/` または `/home` とする
+5. The App③ shall I-01・I-02・I-05（重複検出）を同一ホーム画面（`/home`）内の3タブ切り替え（`?view=find|replenish|duplicate`）で実装する
 
 ---
 

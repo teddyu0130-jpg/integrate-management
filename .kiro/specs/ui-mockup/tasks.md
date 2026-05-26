@@ -53,12 +53,15 @@
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 9.1, 9.2, 9.3, 12.4_
   - _Boundary: ItemForm_
 
-- [x] 2.4 (P) HomeViewToggle — Find / Replenish モード切り替え
+- [x] 2.4 (P) HomeViewToggle — Find / Replenish / Duplicate モード切り替え
   - `components/HomeViewToggle.tsx` を `"use client"` で作成する
-  - `items: UnifiedRecord[]` を props として受け取り、`useSearchParams` で `?view=find|replenish` を読む
-  - `view=find`（デフォルト）のとき `location` でグループ化したリスト、`view=replenish` のとき `stock_level` 優先度順（`empty`→`low`→`ok`→`full`）のリストをレンダリングする
-  - タブボタンをクリックすると URL が `?view=find` または `?view=replenish` に更新される
-  - _Requirements: 3.1, 3.2, 3.5, 4.1, 4.2, 4.5_
+  - `items: UnifiedRecord[]` を props として受け取り、`useSearchParams` で `?view=find|replenish|duplicate` を読む
+  - `view=find`（デフォルト）のとき `location` でグループ化した UnifiedItemCard リスト + SearchBar + ProviderStatusBar をレンダリングする
+  - `view=replenish` のとき `stock_level` 優先度順（`empty`→`low`→`ok`→`full`）の RestockItemRow リストをレンダリングする
+  - `view=duplicate` のとき items から重複ペアを検出し DuplicateAlertCard を表示する
+  - タブボタンをクリックすると URL が `?view=find`・`?view=replenish`・`?view=duplicate` のいずれかに更新される
+  - AppHeader（動的タイトル「探すモード」/「補充モード」/「重複検出」・更新ボタン）を内部に含む
+  - _Requirements: 3.1, 3.2, 3.5, 4.1, 4.2, 4.5, 7.1, 7.2, 7.4_
   - _Boundary: HomeViewToggle_
 
 - [x] 2.5 ItemCard — アイテム行表示コンポーネント
