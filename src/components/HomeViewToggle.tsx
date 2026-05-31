@@ -7,6 +7,7 @@ import type { UnifiedRecord, StockLevel } from '@/types';
 const STOCK_PRIORITY: Record<StockLevel, number> = {
   empty: 0,
   low: 1,
+  half: 2,
   ok: 2,
   full: 3,
 };
@@ -14,6 +15,7 @@ const STOCK_PRIORITY: Record<StockLevel, number> = {
 const STOCK_LABEL: Record<StockLevel, string> = {
   empty: '切れ',
   low: '残り少',
+  half: '半分',
   ok: '良好',
   full: '十分',
 };
@@ -21,6 +23,7 @@ const STOCK_LABEL: Record<StockLevel, string> = {
 const STOCK_BADGE_STYLE: Record<StockLevel, string> = {
   empty: 'bg-missing text-missing-foreground',
   low: 'bg-warning text-warning-foreground',
+  half: 'bg-success text-success-foreground',
   ok: 'bg-success text-success-foreground',
   full: 'bg-secondary text-muted-foreground',
 };

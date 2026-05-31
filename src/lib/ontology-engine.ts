@@ -1,11 +1,97 @@
-import type { UnifiedRecord } from '@/types';
+import { createClient } from '@supabase/supabase-js';
+import type { UnifiedRecord, StockLevel } from '@/types';
 
-// モックアップフェーズのスタブ実装。
-// 実接続フェーズで Provider の REST エンドポイントを並列 fetch する実ロジックに差し替える。
-export async function getItems(): Promise<UnifiedRecord[]> {
-  return [];
+const FIXED_HOUSEHOLD_ID = '00000000-0000-0000-0000-000000000001';
+
+function monoClient() {
+  return createClient(
+    process.env.MONO_SUPABASE_URL!,
+    process.env.MONO_SUPABASE_ANON_KEY!,
+  );
 }
 
-export async function getItem(_: string): Promise<UnifiedRecord | null> {
-  return null;
+function stockClient() {
+  return createClient(
+    process.env.STOCK_SUPABASE_URL!,
+    process.env.STOCK_SUPABASE_ANON_KEY!,
+  );
+}
+
+type Belonging = {
+  iri: string;
+  name: string;
+  category: string;
+  location: string;
+  location_note: string | null;
+  note: string | null;
+  updated_at: string;
+};
+
+type Consumable = {
+  iri: string;
+  name: string;
+  category: string;
+  stock_level: StockLevel;
+  note: string | null;
+  updated_at: string;
+};
+
+export async function getItems(): Promise<UnifiedRecord[]> {
+  const [belongingsResult, consumablesResult] = await Promise.all([
+    monoClient()
+      .from('belongings')
+      .select('iri, name, category, location, location_note, note, updated_at')
+      .eq('household_id', FIXED_HOUSEHOLD_ID),
+    stockClient()
+      .from('consumables')
+      .select('iri, name, category, stock_level, note, updated_at')
+      .eq('household_id', FIXED_HOUSEHOLD_ID),
+  ]);
+
+  const belongings: Belonging[] = belongingsResult.data ?? [];
+  const consumables: Consumable[] = consumablesResult.data ?? [];
+
+  const consumableByName = new Map(
+    consumables.map((c) => [c.name.toLowerCase(), c]),
+  );
+  const belongingByName = new Map(
+    belongings.map((b) => [b.name.toLowerCase(), b]),
+  );
+
+  const records = new Map<string, UnifiedRecord>();
+
+  for (const b of belongings) {
+    const key = b.name.toLowerCase();
+    const c = consumableByName.get(key);
+    records.set(key, {
+      iri: b.iri,
+      name: b.name,
+      category: b.category,
+      location: b.location ?? '',
+      stock_level: c?.stock_level ?? 'ok',
+      note: b.note ?? c?.note ?? '',
+      updated_at: b.updated_at,
+    });
+  }
+
+  for (const c of consumables) {
+    const key = c.name.toLowerCase();
+    if (belongingByName.has(key)) continue;
+    records.set(key, {
+      iri: c.iri,
+      name: c.name,
+      category: c.category,
+      location: '',
+      stock_level: c.stock_level,
+      note: c.note ?? '',
+      updated_at: c.updated_at,
+    });
+  }
+
+  return Array.from(records.values());
+}
+
+export async function getItem(iri: string): Promise<UnifiedRecord | null> {
+  const items = await getItems();
+  return items.find((item) => item.iri === iri) ?? null;
 }

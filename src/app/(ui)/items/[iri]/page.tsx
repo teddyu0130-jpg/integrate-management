@@ -6,6 +6,7 @@ import type { StockLevel } from '@/types';
 const STOCK_LABEL: Record<StockLevel, string> = {
   empty: '切れ',
   low: '残り少',
+  half: '半分',
   ok: '良好',
   full: '十分',
 };
@@ -13,6 +14,7 @@ const STOCK_LABEL: Record<StockLevel, string> = {
 const STOCK_BADGE_STYLE: Record<StockLevel, string> = {
   empty: 'bg-missing text-missing-foreground',
   low: 'bg-warning text-warning-foreground',
+  half: 'bg-success text-success-foreground',
   ok: 'bg-success text-success-foreground',
   full: 'bg-secondary text-muted-foreground',
 };

@@ -1,4 +1,4 @@
-export type StockLevel = 'full' | 'ok' | 'low' | 'empty';
+export type StockLevel = 'full' | 'half' | 'ok' | 'low' | 'empty';
 
 export interface UnifiedRecord {
   iri: string;

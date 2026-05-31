@@ -7,7 +7,7 @@ export default async function ShoppingPage() {
   const buyList = items
     .filter((item) => item.stock_level === 'low' || item.stock_level === 'empty')
     .sort((a, b) => {
-      const priority = { empty: 0, low: 1, ok: 2, full: 3 } as const;
+      const priority: Record<string, number> = { empty: 0, low: 1, half: 2, ok: 2, full: 3 };
       return priority[a.stock_level] - priority[b.stock_level];
     });
 
