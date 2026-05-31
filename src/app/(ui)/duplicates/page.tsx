@@ -4,6 +4,8 @@ import type { UnifiedRecord } from '@/types';
 import StockBadge from '@/components/StockBadge';
 import MergeButton from './MergeButton';
 
+export const dynamic = 'force-dynamic';
+
 function findDuplicates(items: UnifiedRecord[]): UnifiedRecord[][] {
   const nameGroups = items.reduce<Record<string, UnifiedRecord[]>>((acc, item) => {
     if (!acc[item.name]) acc[item.name] = [];

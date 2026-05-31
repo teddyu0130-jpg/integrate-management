@@ -2,6 +2,8 @@ import { Suspense } from 'react';
 import { getItems } from '@/lib/data';
 import HomeViewToggle from '@/components/HomeViewToggle';
 
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage() {
   const items = await getItems();
 

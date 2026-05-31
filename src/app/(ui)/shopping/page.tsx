@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { getItems } from '@/lib/data';
 import StockBadge from '@/components/StockBadge';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ShoppingPage() {
   const items = await getItems();
   const buyList = items

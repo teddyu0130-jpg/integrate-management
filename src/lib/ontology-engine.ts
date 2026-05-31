@@ -17,7 +17,7 @@ function stockClient() {
   );
 }
 
-type Belonging = {
+type Item = {
   iri: string;
   name: string;
   category: string;
@@ -37,9 +37,9 @@ type Consumable = {
 };
 
 export async function getItems(): Promise<UnifiedRecord[]> {
-  const [belongingsResult, consumablesResult] = await Promise.all([
+  const [itemsResult, consumablesResult] = await Promise.all([
     monoClient()
-      .from('belongings')
+      .from('items')
       .select('iri, name, category, location, location_note, note, updated_at')
       .eq('household_id', FIXED_HOUSEHOLD_ID),
     stockClient()
@@ -48,19 +48,19 @@ export async function getItems(): Promise<UnifiedRecord[]> {
       .eq('household_id', FIXED_HOUSEHOLD_ID),
   ]);
 
-  const belongings: Belonging[] = belongingsResult.data ?? [];
+  const items: Item[] = itemsResult.data ?? [];
   const consumables: Consumable[] = consumablesResult.data ?? [];
 
   const consumableByName = new Map(
     consumables.map((c) => [c.name.toLowerCase(), c]),
   );
-  const belongingByName = new Map(
-    belongings.map((b) => [b.name.toLowerCase(), b]),
+  const itemByName = new Map(
+    items.map((b) => [b.name.toLowerCase(), b]),
   );
 
   const records = new Map<string, UnifiedRecord>();
 
-  for (const b of belongings) {
+  for (const b of items) {
     const key = b.name.toLowerCase();
     const c = consumableByName.get(key);
     records.set(key, {
@@ -76,7 +76,7 @@ export async function getItems(): Promise<UnifiedRecord[]> {
 
   for (const c of consumables) {
     const key = c.name.toLowerCase();
-    if (belongingByName.has(key)) continue;
+    if (itemByName.has(key)) continue;
     records.set(key, {
       iri: c.iri,
       name: c.name,
