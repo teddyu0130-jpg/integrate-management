@@ -17,7 +17,7 @@ function findDuplicates(items: UnifiedRecord[]): UnifiedRecord[][] {
 }
 
 export default async function DuplicatesPage() {
-  const items = await getItems();
+  const { items } = await getItems();
   const duplicateGroups = findDuplicates(items);
 
   return (

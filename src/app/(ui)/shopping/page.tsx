@@ -5,7 +5,7 @@ import StockBadge from '@/components/StockBadge';
 export const dynamic = 'force-dynamic';
 
 export default async function ShoppingPage() {
-  const items = await getItems();
+  const { items } = await getItems();
   const buyList = items
     .filter((item) => item.stock_level === 'low' || item.stock_level === 'empty')
     .sort((a, b) => {
