@@ -5,15 +5,15 @@ const FIXED_HOUSEHOLD_ID = '00000000-0000-0000-0000-000000000001';
 
 function monoClient() {
   return createClient(
-    process.env.MONO_SUPABASE_URL!,
-    process.env.MONO_SUPABASE_ANON_KEY!,
+    process.env.MONO_SUPABASE_URL!.trim(),
+    process.env.MONO_SUPABASE_ANON_KEY!.trim(),
   );
 }
 
 function stockClient() {
   return createClient(
-    process.env.STOCK_SUPABASE_URL!,
-    process.env.STOCK_SUPABASE_ANON_KEY!,
+    process.env.STOCK_SUPABASE_URL!.trim(),
+    process.env.STOCK_SUPABASE_ANON_KEY!.trim(),
   );
 }
 
