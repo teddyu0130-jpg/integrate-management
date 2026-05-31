@@ -1,10 +1,17 @@
-import type { UnifiedRecord } from '@/types';
+import type { UnifiedRecord, ProviderErrors } from '@/types';
 import { MOCK_ITEMS } from '@/lib/mock-data';
 import * as engine from '@/lib/ontology-engine';
 
-export async function getItems(): Promise<UnifiedRecord[]> {
+export interface GetItemsResult {
+  items: UnifiedRecord[];
+  providerErrors: ProviderErrors;
+}
+
+const NO_ERRORS: ProviderErrors = { mono: null, stock: null };
+
+export async function getItems(): Promise<GetItemsResult> {
   if (process.env.NEXT_PUBLIC_USE_MOCK?.trim() === 'true') {
-    return MOCK_ITEMS;
+    return { items: MOCK_ITEMS, providerErrors: NO_ERRORS };
   }
   return engine.getItems();
 }

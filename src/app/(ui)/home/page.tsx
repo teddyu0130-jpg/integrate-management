@@ -5,12 +5,12 @@ import HomeViewToggle from '@/components/HomeViewToggle';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const items = await getItems();
+  const { items, providerErrors } = await getItems();
 
   return (
     <main>
       <Suspense fallback={<p className="px-4 py-8 text-sm text-muted-foreground">読み込み中...</p>}>
-        <HomeViewToggle items={items} />
+        <HomeViewToggle items={items} providerErrors={providerErrors} />
       </Suspense>
     </main>
   );

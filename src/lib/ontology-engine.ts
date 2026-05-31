@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { UnifiedRecord, StockLevel } from '@/types';
+import type { UnifiedRecord, ProviderErrors, StockLevel } from '@/types';
 
 const FIXED_HOUSEHOLD_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -36,7 +36,12 @@ type Consumable = {
   updated_at: string;
 };
 
-export async function getItems(): Promise<UnifiedRecord[]> {
+export interface GetItemsResult {
+  items: UnifiedRecord[];
+  providerErrors: ProviderErrors;
+}
+
+export async function getItems(): Promise<GetItemsResult> {
   const [itemsResult, consumablesResult] = await Promise.all([
     monoClient()
       .from('items')
@@ -47,6 +52,11 @@ export async function getItems(): Promise<UnifiedRecord[]> {
       .select('iri, name, category, stock_level, note, updated_at')
       .eq('household_id', FIXED_HOUSEHOLD_ID),
   ]);
+
+  const providerErrors: ProviderErrors = {
+    mono: itemsResult.error?.message ?? null,
+    stock: consumablesResult.error?.message ?? null,
+  };
 
   const items: Item[] = itemsResult.data ?? [];
   const consumables: Consumable[] = consumablesResult.data ?? [];
@@ -88,10 +98,10 @@ export async function getItems(): Promise<UnifiedRecord[]> {
     });
   }
 
-  return Array.from(records.values());
+  return { items: Array.from(records.values()), providerErrors };
 }
 
 export async function getItem(iri: string): Promise<UnifiedRecord | null> {
-  const items = await getItems();
+  const { items } = await getItems();
   return items.find((item) => item.iri === iri) ?? null;
 }

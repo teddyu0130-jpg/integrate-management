@@ -9,3 +9,8 @@ export interface UnifiedRecord {
   note: string;
   updated_at: string;
 }
+
+export interface ProviderErrors {
+  mono: string | null;
+  stock: string | null;
+}

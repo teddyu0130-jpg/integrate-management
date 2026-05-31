@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import type { UnifiedRecord, StockLevel } from '@/types';
+import type { UnifiedRecord, ProviderErrors, StockLevel } from '@/types';
 
 const STOCK_PRIORITY: Record<StockLevel, number> = {
   empty: 0,
@@ -44,9 +44,10 @@ const TABS: { key: View; label: string }[] = [
 
 interface HomeViewToggleProps {
   items: UnifiedRecord[];
+  providerErrors: ProviderErrors;
 }
 
-export default function HomeViewToggle({ items }: HomeViewToggleProps) {
+export default function HomeViewToggle({ items, providerErrors }: HomeViewToggleProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentView = (searchParams.get('view') as View) ?? 'find';
@@ -93,12 +94,16 @@ export default function HomeViewToggle({ items }: HomeViewToggleProps) {
         </div>
       )}
 
-      {/* ProviderStatusBar */}
-      {currentView !== 'duplicate' && (
+      {/* ProviderStatusBar — 実際にエラーがある場合のみ表示 */}
+      {currentView !== 'duplicate' && (providerErrors.mono || providerErrors.stock) && (
         <div className="mx-4 mt-2 h-9 flex items-center gap-2 rounded-lg bg-warning px-4">
           <IconAlert className="text-warning-foreground shrink-0" />
           <span className="text-[13px] text-warning-foreground flex-1">
-            App② から一部属性を取得できません
+            {providerErrors.mono && providerErrors.stock
+              ? 'App①・App② からデータを取得できません'
+              : providerErrors.mono
+              ? 'App① から一部属性を取得できません'
+              : 'App② から一部属性を取得できません'}
           </span>
         </div>
       )}
