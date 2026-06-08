@@ -105,3 +105,28 @@ export async function getItem(iri: string): Promise<UnifiedRecord | null> {
   const { items } = await getItems();
   return items.find((item) => item.iri === iri) ?? null;
 }
+
+export type CreateItemInput = {
+  iri: string;
+  name: string;
+  category: string;
+  location: string;
+  stock_level: StockLevel;
+  note: string;
+};
+
+export async function createItem(input: CreateItemInput): Promise<{ error: string | null }> {
+  const { iri, name, category, location, stock_level, note } = input;
+
+  const [itemsResult, consumablesResult] = await Promise.all([
+    monoClient()
+      .from('items')
+      .insert({ iri, name, category, location, location_note: null, note, household_id: FIXED_HOUSEHOLD_ID }),
+    stockClient()
+      .from('consumables')
+      .insert({ iri, name, category, stock_level, note, household_id: FIXED_HOUSEHOLD_ID }),
+  ]);
+
+  const errorMessage = itemsResult.error?.message ?? consumablesResult.error?.message ?? null;
+  return { error: errorMessage };
+}

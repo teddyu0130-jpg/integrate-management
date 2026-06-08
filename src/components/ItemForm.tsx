@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ulid } from 'ulid';
 import type { StockLevel, UnifiedRecord } from '@/types';
+import { createItem } from '@/lib/actions';
 
 const STOCK_LEVELS: { value: StockLevel; label: string }[] = [
   { value: 'full', label: '満タン' },
@@ -28,10 +30,13 @@ export default function ItemForm({ mode, initialData, onSubmit }: ItemFormProps)
   const [note, setNote] = useState(initialData?.note ?? '');
   const [nameError, setNameError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setNameError('');
+    setErrorMessage('');
 
     if (!name.trim()) {
       setNameError('名前は必須です');
@@ -48,18 +53,25 @@ export default function ItemForm({ mode, initialData, onSubmit }: ItemFormProps)
 
     onSubmit?.(data);
 
-    const message =
-      mode === 'create' ? '登録しました（モック）' : '更新しました（モック）';
-    setSuccessMessage(message);
+    if (mode === 'create') {
+      setSubmitting(true);
+      const iri = `urn:household:item:${ulid()}`;
+      const result = await createItem({ iri, ...data });
+      setSubmitting(false);
 
-    setTimeout(() => {
-      if (mode === 'create') {
-        router.push('/home');
-      } else {
+      if (result.error) {
+        setErrorMessage(result.error);
+        return;
+      }
+      setSuccessMessage('登録しました');
+      setTimeout(() => router.push('/home'), 800);
+    } else {
+      setSuccessMessage('更新しました（モック）');
+      setTimeout(() => {
         const iri = initialData?.iri;
         router.push(iri ? `/items/${encodeURIComponent(iri)}` : '/home');
-      }
-    }, 800);
+      }, 800);
+    }
   }
 
   return (
@@ -67,6 +79,11 @@ export default function ItemForm({ mode, initialData, onSubmit }: ItemFormProps)
       {successMessage && (
         <p className="rounded-md bg-green-50 px-4 py-2 text-sm text-green-700">
           {successMessage}
+        </p>
+      )}
+      {errorMessage && (
+        <p className="rounded-md bg-red-50 px-4 py-2 text-sm text-red-700">
+          {errorMessage}
         </p>
       )}
 
@@ -145,9 +162,10 @@ export default function ItemForm({ mode, initialData, onSubmit }: ItemFormProps)
 
       <button
         type="submit"
-        className="w-full rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+        disabled={submitting}
+        className="w-full rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
       >
-        {mode === 'create' ? '登録する' : '更新する'}
+        {submitting ? '送信中…' : mode === 'create' ? '登録する' : '更新する'}
       </button>
     </form>
   );
