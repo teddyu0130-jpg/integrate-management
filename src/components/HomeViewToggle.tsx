@@ -3,6 +3,8 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { UnifiedRecord, ProviderErrors, StockLevel } from '@/types';
+import { restockItem, mergeItems } from '@/lib/actions';
+import type { MergeGroup } from '@/lib/actions';
 
 const STOCK_PRIORITY: Record<StockLevel, number> = {
   empty: 0,
@@ -54,6 +56,26 @@ export default function HomeViewToggle({ items, providerErrors }: HomeViewToggle
 
   function switchView(view: View) {
     router.push(`/home?view=${view}`);
+  }
+
+  async function handleRestock(name: string) {
+    await restockItem(name);
+    router.refresh();
+  }
+
+  async function handleMerge(group: UnifiedRecord[]) {
+    const loser = group.find((i) => i.iri.startsWith('iri://local.app2.stock/')) ?? group[1];
+    const winner = group.find((i) => !i.iri.startsWith('iri://local.app2.stock/')) ?? group[0];
+    const mergeGroup: MergeGroup = {
+      winnerIri: winner.iri,
+      loserIri: loser.iri,
+      name: loser.name,
+      category: loser.category,
+      stockLevel: loser.stock_level,
+      note: loser.note,
+    };
+    await mergeItems(mergeGroup);
+    router.refresh();
   }
 
   return (
@@ -111,8 +133,8 @@ export default function HomeViewToggle({ items, providerErrors }: HomeViewToggle
       {/* Content */}
       <div className="flex flex-col gap-3 px-4 py-3">
         {currentView === 'find' && <FindModeView items={items} />}
-        {currentView === 'replenish' && <ReplenishModeView items={items} />}
-        {currentView === 'duplicate' && <DuplicateView items={items} />}
+        {currentView === 'replenish' && <ReplenishModeView items={items} onRestock={handleRestock} />}
+        {currentView === 'duplicate' && <DuplicateView items={items} onMerge={handleMerge} />}
       </div>
     </div>
   );
@@ -157,7 +179,7 @@ function UnifiedItemCard({ item }: { item: UnifiedRecord }) {
   );
 }
 
-function RestockItemRow({ item }: { item: UnifiedRecord }) {
+function RestockItemRow({ item, onRestock }: { item: UnifiedRecord; onRestock: (name: string) => void }) {
   return (
     <div className="flex items-center gap-3 rounded-xl bg-card border border-border px-4 h-[72px]">
       <div className="flex-1 flex flex-col gap-1">
@@ -167,6 +189,12 @@ function RestockItemRow({ item }: { item: UnifiedRecord }) {
       <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold bg-warning text-warning-foreground">
         要補充
       </span>
+      <button
+        onClick={() => onRestock(item.name)}
+        className="rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs font-semibold"
+      >
+        補充した
+      </button>
     </div>
   );
 }
@@ -194,7 +222,7 @@ function FindModeView({ items }: { items: UnifiedRecord[] }) {
   );
 }
 
-function ReplenishModeView({ items }: { items: UnifiedRecord[] }) {
+function ReplenishModeView({ items, onRestock }: { items: UnifiedRecord[]; onRestock: (name: string) => void }) {
   const needsRestock = [...items]
     .filter((i) => i.stock_level === 'empty' || i.stock_level === 'low')
     .sort((a, b) => STOCK_PRIORITY[a.stock_level] - STOCK_PRIORITY[b.stock_level]);
@@ -217,7 +245,7 @@ function ReplenishModeView({ items }: { items: UnifiedRecord[] }) {
         <div key={location} className="flex flex-col gap-3">
           <LocationGroupHeader location={`お使い: ${location}`} />
           {groups[location].map((item) => (
-            <RestockItemRow key={item.iri} item={item} />
+            <RestockItemRow key={item.iri} item={item} onRestock={onRestock} />
           ))}
         </div>
       ))}
@@ -234,7 +262,7 @@ function findDuplicates(items: UnifiedRecord[]): UnifiedRecord[][] {
   return Object.values(nameGroups).filter((group) => group.length > 1);
 }
 
-function DuplicateAlertCard({ group }: { group: UnifiedRecord[] }) {
+function DuplicateAlertCard({ group, onMerge }: { group: UnifiedRecord[]; onMerge: (group: UnifiedRecord[]) => void }) {
   const name = group[0].name;
   const detail = group
     .map((i, idx) => `App${['①', '②', '③'][idx] ?? idx + 1} (${i.location})`)
@@ -245,17 +273,23 @@ function DuplicateAlertCard({ group }: { group: UnifiedRecord[] }) {
       <span className="text-[15px] font-bold text-warning-foreground">重複登録の可能性</span>
       <span className="text-base font-semibold text-foreground">{name}</span>
       <span className="text-[13px] text-muted-foreground">{detail} に同一名で登録</span>
+      <button
+        onClick={() => onMerge(group)}
+        className="mt-1 rounded-md border border-yellow-400 px-4 py-2 text-sm font-medium text-yellow-700 hover:bg-yellow-100"
+      >
+        マージ（App①を残す）
+      </button>
     </div>
   );
 }
 
-function DuplicateView({ items }: { items: UnifiedRecord[] }) {
+function DuplicateView({ items, onMerge }: { items: UnifiedRecord[]; onMerge: (group: UnifiedRecord[]) => void }) {
   const groups = findDuplicates(items);
 
   return (
     <>
       {groups.map((group) => (
-        <DuplicateAlertCard key={group[0].name} group={group} />
+        <DuplicateAlertCard key={group[0].name} group={group} onMerge={onMerge} />
       ))}
       <EmptyState title="他に重複はありません" showHint={false} />
     </>

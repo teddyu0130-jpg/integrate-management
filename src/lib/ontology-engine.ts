@@ -115,6 +115,47 @@ export type CreateItemInput = {
   note: string;
 };
 
+export async function updateStockLevel(name: string): Promise<{ error: string | null }> {
+  const { error } = await stockClient()
+    .from('consumables')
+    .update({ stock_level: 'ok' })
+    .eq('household_id', FIXED_HOUSEHOLD_ID)
+    .eq('name', name);
+  return { error: error?.message ?? null };
+}
+
+export type MergeGroup = {
+  winnerIri: string;
+  loserIri: string;
+  name: string;
+  category: string;
+  stockLevel: StockLevel;
+  note: string;
+};
+
+export async function mergeItems(group: MergeGroup): Promise<{ error: string | null }> {
+  const { error: deleteError } = await stockClient()
+    .from('consumables')
+    .delete()
+    .eq('iri', group.loserIri)
+    .eq('household_id', FIXED_HOUSEHOLD_ID);
+
+  if (deleteError) return { error: deleteError.message };
+
+  const { error: insertError } = await stockClient()
+    .from('consumables')
+    .insert({
+      iri: group.winnerIri,
+      name: group.name,
+      category: group.category,
+      stock_level: group.stockLevel,
+      note: group.note,
+      household_id: FIXED_HOUSEHOLD_ID,
+    });
+
+  return { error: insertError?.message ?? null };
+}
+
 export async function createItem(input: CreateItemInput): Promise<{ error: string | null }> {
   const { iri, name, category, location, stock_level, note } = input;
 

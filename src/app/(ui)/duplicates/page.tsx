@@ -57,7 +57,7 @@ export default async function DuplicatesPage() {
                   </li>
                 ))}
               </ul>
-              <MergeButton name={group[0].name} />
+              <MergeButton group={group} />
             </li>
           ))}
         </ul>
